@@ -27,16 +27,16 @@ def get_script_filepath() -> str:
         ).replace('\\', '/')
     return script_filepath
 
-def get_terminal_testapp_folderpath() -> str:
+def get_terminal_spawner_folderpath() -> str:
     '''
-    Get the path to the 'terminal_testapp' folder.
+    Get the path to the 'terminal_spawner' folder.
     '''
     folderpath = os.path.dirname(get_script_filepath()).replace('\\', '/')
-    if folderpath.endswith('terminal_testapp'):
+    if folderpath.endswith('terminal_spawner'):
         pass
     else:
         folderpath = os.path.dirname(folderpath).replace('\\', '/')
-    assert folderpath.endswith('terminal_testapp')
+    assert folderpath.endswith('terminal_spawner')
     return folderpath
 
 def is_frozen() -> bool:
@@ -76,7 +76,7 @@ def spawn_child_app_python(wait_after_spawn:bool, quit_after_spawn:bool) -> None
     print(f'Wait after spawn: {wait_after_spawn}')
     print(f'Quit after spawn: {quit_after_spawn}')
     wait_func = functions.spawn_new_terminal(
-        script_or_exe_path = f'{get_terminal_testapp_folderpath()}/child_app.py',
+        script_or_exe_path = f'{get_terminal_spawner_folderpath()}/child_app.py',
         argv = ['--foo', '--bar'],
     )
     if wait_after_spawn:
@@ -94,7 +94,7 @@ def spawn_child_app_exe(wait_after_spawn:bool, quit_after_spawn:bool) -> None:
     print(f'Spawning child app executable ...')
     print(f'Wait after spawn: {wait_after_spawn}')
     print(f'Quit after spawn: {quit_after_spawn}')
-    executable_path = f'{get_terminal_testapp_folderpath()}/frozen_child_app/child_app'
+    executable_path = f'{get_terminal_spawner_folderpath()}/frozen_child_app/child_app'
     if platform.system().lower() == 'windows':
         executable_path += '.exe'
     wait_func = functions.spawn_new_terminal(

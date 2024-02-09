@@ -27,16 +27,16 @@ def get_script_filepath() -> str:
         ).replace('\\', '/')
     return script_filepath
 
-def get_terminal_testapp_folderpath() -> str:
+def get_terminal_spawner_folderpath() -> str:
     '''
-    Get the path to the 'terminal_testapp' folder.
+    Get the path to the 'terminal_spawner' folder.
     '''
     folderpath = os.path.dirname(get_script_filepath()).replace('\\', '/')
-    if folderpath.endswith('terminal_testapp'):
+    if folderpath.endswith('terminal_spawner'):
         pass
     else:
         folderpath = os.path.dirname(folderpath).replace('\\', '/')
-    assert folderpath.endswith('terminal_testapp')
+    assert folderpath.endswith('terminal_spawner')
     return folderpath
 
 def is_frozen() -> bool:

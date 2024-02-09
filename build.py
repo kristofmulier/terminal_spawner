@@ -88,8 +88,8 @@ def build(main_script_path:str,
     return
 
 if __name__ == '__main__':
-    #$ Path to parent folder 'terminal_testapp'
-    _terminal_testapp_folderpath = os.path.dirname(
+    #$ Path to parent folder 'terminal_spawner'
+    _terminal_spawner_folderpath = os.path.dirname(
         os.path.realpath(
             inspect.getfile(
                 inspect.currentframe()
@@ -99,16 +99,16 @@ if __name__ == '__main__':
 
     #$ Build Parent App
     build(
-        main_script_path     = f'{_terminal_testapp_folderpath}/parent_app.py',
+        main_script_path     = f'{_terminal_spawner_folderpath}/parent_app.py',
         executable_name      = 'parent_app.exe' if platform.system().lower() == 'windows' else 'parent_app',
-        output_freeze_folder = f'{_terminal_testapp_folderpath}/frozen_parent_app'.replace('\\', '/'),
+        output_freeze_folder = f'{_terminal_spawner_folderpath}/frozen_parent_app'.replace('\\', '/'),
     )
 
     #$ Build Child App
     build(
-        main_script_path     = f'{_terminal_testapp_folderpath}/child_app.py',
+        main_script_path     = f'{_terminal_spawner_folderpath}/child_app.py',
         executable_name      = 'child_app.exe' if platform.system().lower() == 'windows' else 'child_app',
-        output_freeze_folder = f'{_terminal_testapp_folderpath}/frozen_child_app'.replace('\\', '/'),
+        output_freeze_folder = f'{_terminal_spawner_folderpath}/frozen_child_app'.replace('\\', '/'),
     )
 
     input('Press any key to exit ...')

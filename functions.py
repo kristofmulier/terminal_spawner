@@ -6,7 +6,7 @@ Copyright 2018-2023 Johan Cockx, Matic Kukovec and Kristof Mulier.
 # Functions to be used by any script in the project.
 from __future__ import annotations
 from typing import *
-import sys, os, inspect, subprocess, platform, time, shlex, shutil
+import sys, os, subprocess, platform, time, shlex, shutil
 q = "'"
 
 
@@ -132,7 +132,6 @@ def __spawn_terminal_windows(program:str, argv:List[str], **kwargs) -> Callable:
         f'    {kwargs},\n'
         f')'
     )
-    sys.stdout.flush()
     time.sleep(1)
     p = subprocess.Popen(
         arguments,
@@ -162,7 +161,6 @@ def __spawn_terminal_linux(program:str, argv:List[str], **kwargs) -> Callable:
             f'    {kwargs},\n'
             f')'
         )
-        sys.stdout.flush()
         time.sleep(1)
         p = subprocess.Popen(
             arguments,
@@ -180,7 +178,6 @@ def __spawn_terminal_linux(program:str, argv:List[str], **kwargs) -> Callable:
             f'    {kwargs},\n'
             f')'
         )
-        sys.stdout.flush()
         time.sleep(1)
         p = subprocess.Popen(
             arguments,
@@ -197,7 +194,6 @@ def __spawn_terminal_linux(program:str, argv:List[str], **kwargs) -> Callable:
             f'    {kwargs},\n'
             f')'
         )
-        sys.stdout.flush()
         time.sleep(1)
         p = subprocess.Popen(
             arguments,

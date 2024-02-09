@@ -6,11 +6,14 @@ Copyright 2018-2023 Johan Cockx, Matic Kukovec and Kristof Mulier.
 # This is a simply PyQt6 application that creates a window with a button.
 from __future__ import annotations
 from typing import *
-import sys, os, inspect, platform, functions
+import sys, os, inspect, platform, argparse, functions
 from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 q = "'"
+foo_value: bool = False
+bar_value: Optional[str] = None
+args_valid: bool = True
 
 def get_script_filepath() -> str:
     '''
@@ -53,8 +56,23 @@ def get_info() -> Dict[str, str]:
         # Path to the script or executable running right now
         'This file is running from: '.ljust(30): str(get_script_filepath()),
 
+        # Arguments
+        'sys.argv: '.ljust(30): '[\n' + ',\n'.join(f'    \'{item}\'' for item in sys.argv) + '\n]',
+
+        # Original arguments
+        'sys.orig_argv: '.ljust(30): '[\n' + ',\n'.join(f'    \'{item}\'' for item in sys.orig_argv) + '\n]',
+
+        # System path
+        'sys.path'.ljust(30): '[\n' + ',\n'.join(f'    \'{item}\'' for item in sys.path) + '\n]',
+
         # Is the script or executable running right now frozen?
         'Frozen: '.ljust(30): str(is_frozen()),
+
+        # Foo argument
+        'Foo argument: '.ljust(30): str(foo_value),
+
+        # Bar argument
+        'Bar argument: '.ljust(30): str(bar_value),
     }
 
 def print_info() -> None:
@@ -66,18 +84,26 @@ def print_info() -> None:
         print(f'{k} {v}')
     return
 
-def spawn_child_app_python(wait_after_spawn:bool, quit_after_spawn:bool) -> None:
+def spawn_child_app_python(pass_args:bool,
+                           wait_after_spawn:bool,
+                           quit_after_spawn:bool,
+                           ) -> None:
     '''
-    Function to be called when the button is clicked.
+    Spawn the child application as a python script.
+
+    :param pass_args:        Pass the own 'foo' and 'bar' args to the child app.
+    :param wait_after_spawn: Wait after spawning the child app (run the 'wait_func()').
+    :param quit_after_spawn: Quit after spawning the child app.
     '''
     print(quit_after_spawn)
     #$ Spawn child app python script
     print(f'Spawning child app python script ...')
-    print(f'Wait after spawn: {wait_after_spawn}')
-    print(f'Quit after spawn: {quit_after_spawn}')
+    print(f'Pass args to child: {pass_args}')
+    print(f'Wait after spawn:   {wait_after_spawn}')
+    print(f'Quit after spawn:   {quit_after_spawn}')
     wait_func = functions.spawn_new_terminal(
         script_or_exe_path = f'{get_terminal_spawner_folderpath()}/child_app.py',
-        argv = ['--foo', '--bar'],
+        argv = sys.argv[1:] if pass_args else [],
     )
     if wait_after_spawn:
         wait_func()
@@ -85,21 +111,29 @@ def spawn_child_app_python(wait_after_spawn:bool, quit_after_spawn:bool) -> None
         sys.exit(0)
     return
 
-def spawn_child_app_exe(wait_after_spawn:bool, quit_after_spawn:bool) -> None:
+def spawn_child_app_exe(pass_args:bool,
+                        wait_after_spawn:bool,
+                        quit_after_spawn:bool,
+                        ) -> None:
     '''
-    Function to be called when the button is clicked.
+    Spawn the child application as an executable.
+
+    :param pass_args:        Pass the own 'foo' and 'bar' args to the child app.
+    :param wait_after_spawn: Wait after spawning the child app (run the 'wait_func()').
+    :param quit_after_spawn: Quit after spawning the child app.
     '''
     print(quit_after_spawn)
     #$ Spawn child app executable
     print(f'Spawning child app executable ...')
-    print(f'Wait after spawn: {wait_after_spawn}')
-    print(f'Quit after spawn: {quit_after_spawn}')
+    print(f'Pass args to child: {pass_args}')
+    print(f'Wait after spawn:   {wait_after_spawn}')
+    print(f'Quit after spawn:   {quit_after_spawn}')
     executable_path = f'{get_terminal_spawner_folderpath()}/frozen_child_app/child_app'
     if platform.system().lower() == 'windows':
         executable_path += '.exe'
     wait_func = functions.spawn_new_terminal(
         script_or_exe_path = executable_path,
-        argv = ['--foo', '--bar'],
+        argv = sys.argv[1:] if pass_args else [],
     )
     if wait_after_spawn:
         wait_func()
@@ -114,10 +148,13 @@ class MainWindow(QMainWindow):
 
         # Set the main window size
         self.setMinimumSize(QSize(1000, 300))
-        if is_frozen():
-            self.setStyleSheet('background-color: #729fcf;')
+        if not args_valid:
+            self.setStyleSheet('background-color: #fccccc;')
         else:
-            self.setStyleSheet('background-color: #d3d7cf;')
+            if is_frozen():
+                self.setStyleSheet('background-color: #729fcf;')
+            else:
+                self.setStyleSheet('background-color: #d3d7cf;')
 
         # Set the window title
         self.setWindowTitle('PARENT APP')
@@ -132,18 +169,35 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(centralWidget)
         layout = QVBoxLayout(centralWidget)
 
-        # Prevent the widgets from stretching vertically by adding a stretch at the end of the layout
-        layout.addStretch(1)
-
         #& Labels
+        if not args_valid:
+            label = QLabel('Invalid arguments!', self)
+            label.setFont(monospace_font)
+            layout.addWidget(label)
+            return
         # Create labels and text fields, placing them next to each other
         for label_text, text_content in get_info().items():
             # Create a horizontal layout for each label-text field pair
             horizontal_layout = QHBoxLayout()
 
-            label = QLabel(str(label_text), self)
+            #$ LABEL
+            txt = str(label_text)
+            label = QLabel(txt, self)
             label.setFont(monospace_font)
-            text_field = QLineEdit(str(text_content), self)
+
+            #$ TEXT FIELD
+            txt = str(text_content)
+            if '\n' in txt:
+                text_field = QPlainTextEdit(txt, self)
+                n = txt.count('\n') + 1
+                text_field.setMaximumHeight(
+                    min(
+                        300,
+                        text_field.fontMetrics().lineSpacing() * n + 20,
+                    )
+                )
+            else:
+                text_field = QLineEdit(txt, self)
             text_field.setFont(monospace_font)
             text_field.setReadOnly(True)
             text_field.setStyleSheet('background-color: #ffffff;')
@@ -153,10 +207,16 @@ class MainWindow(QMainWindow):
             horizontal_layout.addWidget(text_field)
 
             # Add the horizontal layout to the main vertical layout
-            layout.insertLayout(layout.count() - 1, horizontal_layout)
+            layout.addLayout(horizontal_layout)
+            continue
 
         #& Buttons
-        #$ CHECKBOX
+        #$ CHECKBOXES
+        self.pass_args_checkbox = QCheckBox(f'Pass own {q}foo{q} and {q}bar{q} args to child', self)
+        self.pass_args_checkbox.setFont(monospace_font)
+        self.pass_args_checkbox.setStyleSheet('text-align:left;')
+        self.pass_args_checkbox.setChecked(True)
+
         self.wait_checkbox = QCheckBox('Run waitfunc() after spawning child', self)
         self.wait_checkbox.setFont(monospace_font)
         self.wait_checkbox.setStyleSheet('text-align:left;')
@@ -183,6 +243,7 @@ class MainWindow(QMainWindow):
         self.python_spawn_btn.setStyleSheet('text-align:left; background-color: #eeeeec;')
         self.python_spawn_btn.clicked.connect(
             lambda: spawn_child_app_python(
+                self.pass_args_checkbox.isChecked(),
                 self.wait_checkbox.isChecked(),
                 self.quit_checkbox.isChecked(),
             )
@@ -196,6 +257,7 @@ class MainWindow(QMainWindow):
         self.exe_spawn_btn.setStyleSheet('text-align:left; background-color: #eeeeec;')
         self.exe_spawn_btn.clicked.connect(
             lambda: spawn_child_app_exe(
+                self.pass_args_checkbox.isChecked(),
                 self.wait_checkbox.isChecked(),
                 self.quit_checkbox.isChecked(),
             )
@@ -204,6 +266,7 @@ class MainWindow(QMainWindow):
         # Add stretch to push everything to the top, then add the button
         layout.addStretch(5)
         layout.addSpacing(60)
+        layout.addWidget(self.pass_args_checkbox)
         layout.addWidget(self.wait_checkbox)
         layout.addWidget(self.quit_checkbox)
         layout.addStretch(1)
@@ -214,6 +277,7 @@ class MainWindow(QMainWindow):
 
         # Adjust size to content
         self.adjustSize()
+        return
 
 def main() -> int:
     '''
@@ -228,4 +292,24 @@ def main() -> int:
     return app.exec()
 
 if __name__ == '__main__':
+    #$ Parse arguments
+    parser = argparse.ArgumentParser(description='Parent application.')
+    parser.add_argument(
+        '--foo',
+        action = 'store_true',
+        help   = 'A boolean flag. Present means True, absent means False.'
+    )
+    parser.add_argument(
+        '--bar',
+        type = str,
+        help = 'A string argument'
+    )
+    try:
+        args = parser.parse_args()
+        foo_value = args.foo
+        bar_value = args.bar
+    except:
+        args_valid = False
+
+    #$ Run GUI and quit after
     sys.exit(main())

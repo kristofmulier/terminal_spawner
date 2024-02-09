@@ -5,8 +5,9 @@ Copyright 2018-2023 Johan Cockx, Matic Kukovec and Kristof Mulier.
 # SUMMARY:
 # This script should be invoked to build the main application in 'main.py' with cx_freeze.
 from __future__ import annotations
-import sys, os, platform, functions, shutil, inspect
+import sys, os, platform, shutil, inspect, argparse
 q = "'"
+no_console: bool = False
 
 def build(main_script_path:str,
           executable_name:str,
@@ -55,11 +56,18 @@ def build(main_script_path:str,
         )
 
     #& Executables
+    base = None
+    if no_console:
+        if platform.system().lower() == 'windows':
+            base = 'Win32GUI'
+        else:
+            print('ERROR: --no-console is only supported on Windows. Exiting ...')
+            sys.exit(1)
     executables = [
         cx_Freeze.Executable(
             main_script_path,
             init_script = None,
-            base        = 'Win32GUI' if platform.system().lower() == 'windows' else None,
+            base        = base,
             icon        = f'{os.path.dirname(main_script_path)}/icon.ico'.replace('\\', '/'),
             target_name = executable_name,
         ),
@@ -96,6 +104,19 @@ if __name__ == '__main__':
             )
         )
     ).replace('\\', '/')
+
+    #$ Parse arguments
+    parser = argparse.ArgumentParser(description='Process some arguments.')
+    parser.add_argument(
+        '--no-console',
+        action = 'store_true',
+        help   = str(
+            f'Freeze the apps with {q}Win32GUI{q} instead of {q}Win32Console{q}. '
+            f'Only supported on Windows.'
+        )
+    )
+    args = parser.parse_args()
+    no_console = args.no_console
 
     #$ Build Parent App
     build(

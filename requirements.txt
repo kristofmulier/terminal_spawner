@@ -1,0 +1,96 @@
+# REQUIREMENTS FILE FOR EMBEETLE
+# ==============================
+# This requirements file works for both Windows and Linux. Install the required packages like so:
+#
+#     $ pip install -r requirements.txt
+#
+# To upgrade all your packages, issue this command:
+#
+#     $ pip install --upgrade -r requirements.txt
+#
+# To do a fresh install:
+# 
+#     $ pip install --upgrade --force-reinstall -r requirements.txt
+
+# Docker
+# ------
+# This requirements.txt file is not automatically invoked during our Docker procedure. Therefore,
+# any new package you add here should be duplicated in:
+# 'embeetle/build-in-docker/beetle-builder-pyqt6/Dockerfile'
+
+# Tools (Windows)
+# ---------------
+# Install CMake for Windows and make sure it's added to the PATH during the installation procedure.
+# On my computer, I accepted the default installation folder: 'C:/Program Files/CMake/'
+# https://cmake.org/download/
+
+# Git Alias
+# ---------
+# The local 'sys' folder must be synced with the remote one at 'https://[new.]embeetle.com/
+# downloads/sa/[linux|windows]/sys'. I created a python script that invokes rsync to accomplish just
+# that.
+# It's useful to bind this python script to your '$git pull' command. I tried to achieve that with
+# hooks - but they only work if an actual merge happens. Running '$git pull' on a repository that is
+# already up to date won't invoke the hook. So I came up with a git alias to automate the task. To
+# install the alias, just run the following command:
+#
+# $ git config --global alias.mypull "!f() { python beetle_updater/sys_updater.py -n && git pull; }; f"
+#
+# Then you should issue the command:
+#
+# $ git mypull
+# 
+# instead of:
+#
+# $ git pull
+#
+# My 'sys_updater.py' script will run with the '-n' flag such that it reaches out to the testserver.
+# It will then sync your local 'sys' folder with the remote one Johan placed there.
+#
+# More info here:
+# https://forum.embeetle.com/t/git-alias-to-pull-johans-sys-folder/862
+
+# Basic packages
+# --------------
+# These packages should be provided by the basic Python installation, and therefore don't need to be
+# mentioned in the requirements file:
+# setuptools
+# wheel
+
+# Required Packages
+# -----------------
+PyQt6>=6.4.2
+PyQt6-Qt6>=6.4.3
+PyQt6-QScintilla>=2.13.4
+PyQt6-sip>=13.4.1
+PyQt6-WebEngine>=6.6.0
+regex>=2023.3.23
+pyserial>=3.5
+packaging>=23.0
+hypothesis>=6.70.2
+zmq>=0.0.0
+xmltodict>=0.13.0
+watchdog>=3.0.0
+colorama>=0.4.6
+pyelftools>=0.29
+feedparser>=6.0.10
+lowbar>=1.5.2
+pyte>=0.8.1
+chardet>=5.2.0
+
+# Required for building
+# ---------------------
+# cx-Freeze>=6.14.9
+--extra-index-url https://marcelotduarte.github.io/packages/
+cx_Freeze
+Cython>=0.29.34
+
+# Required only on Windows
+# ------------------------
+pywin32>=306; platform_system == "Windows"
+pywinpty>=2.0.11; platform_system == "Windows"
+winshell>=0.6; platform_system == "Windows"
+
+# Required only on Linux
+# ----------------------
+ptyprocess>=0.7.0; platform_system != "Windows"

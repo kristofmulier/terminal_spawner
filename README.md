@@ -111,6 +111,9 @@ $ python build.py [--no-console]
 
 If you add `--no-console` here, the argument `base = 'Win32GUI'` is passed to cx_freeze. This has a profound effect on the behavior of the frozen app. The button `PRINT INFO TO CONSOLE` no longer works - which is pretty normal. However, it also causes the app to crash when you try to spawn a child!
 
+> NOTE:
+> In Python 3.9, it wouldn't crash. In Python 3.12 it does.
+
 &nbsp;<br>
 # 6. How the Parent Spawns its Child
 
